@@ -87,6 +87,8 @@ qdevice_name: "{{  qdevice.name if "qdevice" in env }}"
 
 qdevice_ip: "{{  qdevice.private_ip if "qdevice" in env }}"
 
+qdevice_qnetd_hostname: "{{  qdevice.name if "qdevice" in env }}"
+
 examiner_enabled: {{ jsonify(examiner.enabled) if "examiner" in env else jsonify(false) }}
 
 examiner_name: "{{  examiner.name if "examiner" in env }}"
