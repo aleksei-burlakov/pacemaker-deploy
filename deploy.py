@@ -304,6 +304,7 @@ def upload(name):
     path_deployment_provision = utils.path_deployment_provision(env["name"])
     path_provision = utils.path_provision(env["name"])
     for role, _, name, host, username, password in utils.get_hosts_from_env(env):
+        uploads.append( (name, host, username, password, f"{path_provision}/.alias", f"/root/") )
         uploads.append( (name, host, username, password, f"{path_provision}/provision.sh", f"/tmp/salt/") )
         uploads.append( (name, host, username, password, f"{path_provision}/minion", "/tmp/salt/") )
         uploads.append( (name, host, username, password, f"{path_deployment_provision}/{name}.grains", "/tmp/salt/grains") )
@@ -323,6 +324,15 @@ def upload(name):
 
     logging.info("OK\n")
 
+    # FIXME! Workaround. You should create a salt state that adds aliases instead
+    for role, _, name, host, username, password in utils.get_hosts_from_env(env):
+        command = f"source /root/.alias"
+        res = ssh.run(username, password, host, command)
+        if tasks.has_failed(res):
+            logging.info(f"Cannot create aliases")
+            logging.info(tasks.get_stderr(res))
+            return res
+
     return tasks.success()
 
 
@@ -334,7 +344,8 @@ def provision_task(name, host, username, password, phases):
     # Execute provisioning
     #
     for phase in phases:
-        res = ssh.run(username, password, host, f"sudo sh /tmp/salt/provision.sh -{phase[0]} -l /var/log/provision.log")
+        #res = ssh.run(username, password, host, f"sudo sh /tmp/salt/provision.sh -{phase[0]} -l /var/log/provision-{phase[0]}.log")
+        res = ssh.run(username, password, host, f"sudo sh /tmp/salt/provision.sh -{phase[0]} -l /tmp/salt/provision-{phase[0]}.log")
         if tasks.has_failed(res):
             logging.info(f"phase {phase} error -> [{name}={host}]")
             break
@@ -422,7 +433,7 @@ def provision_execute(name):
     # Execute provisioning in mostly parallel (first a group of machines, then the second one)
     logging.info(f"Provisioning nodes")
    
-    clock.start()     
+    clock.start()
 
     group1 = [ host for host in hosts]
     group2 = [ host for host in hosts]

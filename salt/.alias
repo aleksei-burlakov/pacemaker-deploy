@@ -1,0 +1,4 @@
+alias iosc="osc -A https://api.suse.de"
+alias ls='ls --color=auto'
+alias ll='ls -1'
+alias grep='grep --color=auto'
